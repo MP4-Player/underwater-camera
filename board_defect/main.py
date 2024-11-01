@@ -22,21 +22,23 @@ def process_frame(frame):
     return frame
 
 
-cap = cv2.VideoCapture(0)
+if __name__ == "__main__":
 
-while True:
+    cap = cv2.VideoCapture(0)
 
-    ret, frame = cap.read()
+    while True:
 
-    if not ret:
-        break
-    
-    cv2.imshow('Canny_video', process_frame(frame))
+        ret, frame = cap.read()
 
-
-    if cv2.waitKey(1) == ord('q'):
-        break
+        if not ret:
+            break
+        
+        cv2.imshow('Canny_video', process_frame(frame))
 
 
-cap.release()
-cv2.destroyAllWindows()
+        if cv2.waitKey(1) == ord('q'):
+            break
+
+
+    cap.release()
+    cv2.destroyAllWindows()
