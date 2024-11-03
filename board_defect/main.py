@@ -4,7 +4,7 @@ def process_frame(frame):
     frame = cv2.medianBlur(frame, 3)
 
 
-    gray_frame = cv2.cvtColor(frame, cv2.RETR_TREE)
+    gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
 
     t_lower = 70 
