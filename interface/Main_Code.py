@@ -6,10 +6,10 @@ import json
 import datetime
 
 def create_file():
-    empty_data = {}
+    data = {}
 
     with open('test.json', "w") as json_file:
-        json.dump(empty_data, json_file, indent=8)
+        json.dump(data, json_file, indent=8)
         
     return
 
@@ -30,14 +30,14 @@ def save_object(name, size):
     return
 
 
-def the_same(name):
+def identical_names(name):
     with open('test.json') as f:
         json_list = json.load(f)
         
     if name in json_list:
         return 1
-      
-def get_ellipse_coords(point: tuple[int, int]) -> tuple[int, int, int, int]:
+
+def get_dots_coords(point: tuple[int, int]) -> tuple[int, int, int, int]:
     center = point
     print(center)
     radius = 4
@@ -47,19 +47,19 @@ def get_ellipse_coords(point: tuple[int, int]) -> tuple[int, int, int, int]:
         center[0] + radius,
         center[1] + radius,
     )
-    
-def Frame():
+
+def create_frame():
     #st.session_state['flag']
-    Continuation = st.button("New object")
+    continue_button = st.button("New object")
     
-    if not Continuation and len(st.session_state['points']) <= 2:
+    if not continue_button and len(st.session_state['points']) <= 2:
         img = Image.fromarray(st.session_state['frame'])
         draw = ImageDraw.Draw(img)
         
         
         for point in st.session_state["points"]:
             print(st.session_state["points"])
-            coords = get_ellipse_coords(point)
+            coords = get_dots_coords(point)
             draw.ellipse(coords, fill="red")
         
         value = sic(img, key="pil")
@@ -73,14 +73,14 @@ def Frame():
         else:
             pass
     
-    elif Continuation:
+    elif continue_button:
         del st.session_state["points"], st.session_state["frame"], st.session_state["flag"]#, st.session_state['pil']
         print(st.session_state)
 
-def Stream(flag):
-    Paused_button = st.button("Paused")
+def stream(flag):
+    paused_button = st.button("Paused")
     
-    if not Paused_button or flag:
+    if not paused_button or flag:
         cap = cv2.VideoCapture(0)
         frame_placeholder = st.empty()
         
@@ -91,10 +91,10 @@ def Stream(flag):
                 break
             
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            if not Paused_button:
+            if not paused_button:
                 frame_placeholder.image(frame, channels="RGB", width=800)
             
-            if Paused_button:
+            if paused_button:
                 st.session_state['flag'] = False
                 st.session_state['frame'] = frame
                 break
@@ -112,7 +112,7 @@ if __name__ == '__main__':
         create_file()
 
     with open('test.json') as f:
-        task_list = json.load(f)
+        objects_list = json.load(f)
 
     st.sidebar.title('История измерений')
 
@@ -120,14 +120,14 @@ if __name__ == '__main__':
         if st.button("Удалить историю", key = 'delete'):
             create_file()
             st.success("История успешно удалена.")
-        task_name = st.selectbox("Сохраненные объекты", list(task_list.keys()))
+        object_name = st.selectbox("Сохраненные объекты", list(objects_list.keys()))
 
 
-    if task_name in task_list:  
-        st.sidebar.write(f"Размер объекта: {task_name}")
-        task = task_list[task_name]
-        st.sidebar.write(f"- Время: {task['time']}")
-        st.sidebar.write(f"- Размер: {task['size']}")
+    if object_name in objects_list:  
+        st.sidebar.write(f"Размер объекта: {object_name}")
+        object_list = objects_list[object_name]
+        st.sidebar.write(f"- Время: {object_list['time']}")
+        st.sidebar.write(f"- Размер: {object_list['size']}")
 
     st.title('Окно камеры')
     
@@ -142,17 +142,17 @@ if __name__ == '__main__':
 
     
     if st.session_state['flag'] == True:
-        frame_main = Stream(st.session_state['flag'])
+        frame_main = stream(st.session_state['flag'])
         
-    Frame()
+    create_frame()
     
     title = st.text_input("Введите название объекта:", key = 'title')
     size = 4539
 
-    the_same(title)
+    identical_names(title)
 
     if st.button("Сохранить", key = 'save'):
-        if the_same(title) == 1:
+        if identical_names(title) == 1:
             st.error (f"Объект {title} уже есть, пожалуйста, измените название объекта.")
         else:
             save_object(title, size)
