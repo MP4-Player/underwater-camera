@@ -1,9 +1,12 @@
+
 import cv2
 import streamlit as st
 from PIL import Image, ImageDraw
 from streamlit_image_coordinates import streamlit_image_coordinates as sic
 import json
 import datetime
+from board_defect.main import *
+from board_defect.autopoint import *
 
 def create_file():
     data = {}
@@ -37,9 +40,9 @@ def identical_names(name):
     if name in json_list:
         return 1
 
-def get_dots_coords(point: tuple[int, int]) -> tuple[int, int, int, int]:
+def get_dots_coords(point):
     center = point
-    print(center)
+    # print(center)
     radius = 4
     return (
         center[0] - radius,
@@ -63,10 +66,10 @@ def create_frame():
             draw.ellipse(coords, fill="red")
         
         value = sic(img, key="pil")
-        print(value)
+        # print(value)
         if value is not None:
             point = value["x"], value["y"]
-            print(point)
+            # print(point)
             if point not in st.session_state["points"]:
                 st.session_state["points"].append(point)
                 st.rerun()
@@ -81,6 +84,7 @@ def stream(flag):
     paused_button = st.button("Paused")
     
     if not paused_button or flag:
+        # cap = freenect.sync_get_video()[0]
         cap = cv2.VideoCapture(0)
         frame_placeholder = st.empty()
         
@@ -89,17 +93,17 @@ def stream(flag):
             if not ret:
                 st.write("The video capture has ended.")
                 break
-            
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)            
+            frame = process_frame(frame)
             if not paused_button:
-                frame_placeholder.image(frame, channels="RGB", width=800)
+                frame_placeholder.image(frame, channels="BGR", width=800)
             
             if paused_button:
                 st.session_state['flag'] = False
                 st.session_state['frame'] = frame
                 break
     
-    cap.release()
+    
     cv2.destroyAllWindows()
 
     
