@@ -4,6 +4,8 @@ from PIL import Image, ImageDraw
 from streamlit_image_coordinates import streamlit_image_coordinates as sic
 import json
 import datetime
+from board_defect.main_code_board_defect import *
+from board_defect.autopoint import *
 
 def main_menu(logo1_url, logo2_url):
     st.markdown(
@@ -212,6 +214,7 @@ def stream(flag):
 
             # Преобразуем цветной формат и отображаем поток
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            frame = process_frame(frame)
             if not st.session_state['paused']:
                 frame_placeholder.image(frame, channels="RGB", width=800)
             else:
