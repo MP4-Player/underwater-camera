@@ -25,46 +25,29 @@ def process_image(image_path):
 
     return img, contours
 
-def mouse_callback(event, x, y, flags, param):
-
-
-    if event == cv2.EVENT_LBUTTONDOWN:
-
-
-        min_distance = float('inf')
-        contur_point = None
-
-        for contour in contours:
-
-            for point in contour: 
-
-                distance = np.linalg.norm(np.array((x, y)) - point[0])
-
-
-                if distance < min_distance and distance <= 10:
-
-                    min_distance = distance
-                    contur_point = point[0]
-
-       
-        if contur_point is not None:
-
-            points.append(contur_point)
-
-            print(f"Точка добавлена на контур: ({contur_point[0]}, {contur_point[1]})")
+def mouse_callback(x, y, flags, param, contours):
     
-        else:
+    min_distance = float('inf')
+    contur_point = None
 
-            points.append((x, y))
+    for contour in contours:
+        for point in contour: 
+            
+            distance = np.linalg.norm(np.array((x, y)) - point[0])
+            
+            if distance < min_distance and distance <= 10:
+                min_distance = distance
+                contur_point = point[0]
 
-            print(f"Точка добавлена на своих координатах: ({x}, {y})")
+    if contur_point is not None:
+        return contur_point[0], contur_point[1]
+    else:
+        return x, y
 
 def main():
-    global img, contours,points
-
+    global img, contours, points
 
     image_path = 'test4.jpg'
-
 
     img, contours = process_image(image_path)
 
