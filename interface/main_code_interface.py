@@ -152,10 +152,11 @@ def identical_names(name):
 def clear_text():
     st.session_state.text = ""
 
+
 def get_dots_coords(point: tuple[int, int]) -> tuple[int, int, int, int]:
     center = point
-    print(center)
-    radius = 4
+    #print(center)
+    radius = 3
     return (
         center[0] - radius,
         center[1] - radius,
@@ -173,24 +174,25 @@ def create_frame():
         
         
         for point in st.session_state["points"]:
-            print(st.session_state["points"])
+            #print(st.session_state["points"])
             coords = get_dots_coords(point)
             draw.ellipse(coords, fill="red")
         
+        
         value = sic(img, key="pil")
-        print(value)
+        
         if value is not None:
             point = value["x"], value["y"]
             print(point)
             if point not in st.session_state["points"]:
-                st.session_state["points"].append(point)
+                new_point = mouse_callback(value['x'], value['y'], True, True, st.session_state["contours"])
+                st.session_state["points"].append(new_point)
+                del st.session_state['pil']
                 st.rerun()
         else:
             pass
-    
     elif continue_button:
-        del st.session_state["points"], st.session_state["frame"], st.session_state["flag"], st.session_state["paused"]#, st.session_state['pil']
-        print(st.session_state)
+        del st.session_state["points"], st.session_state["frame"], st.session_state["flag"], st.session_state["paused"]
 
 
 def stream(flag):
@@ -214,13 +216,14 @@ def stream(flag):
 
             # Преобразуем цветной формат и отображаем поток
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            frame = process_frame(frame)
+            frame, contours = process_frame(frame)
             if not st.session_state['paused']:
                 frame_placeholder.image(frame, channels="RGB", width=800)
             else:
                 # Сохраняем текущий кадр при паузе
                 st.session_state["frame"] = frame
                 st.session_state["flag"] = False
+                st.session_state["contours"] = contours
                 break
         cap.release()
         cv2.destroyAllWindows()

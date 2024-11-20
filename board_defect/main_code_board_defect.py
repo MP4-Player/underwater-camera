@@ -13,8 +13,8 @@ def process_frame(frame):
     contours, hierarchy = cv2.findContours(canny_frame, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
 
     cv2.drawContours(frame, contours, -1, (255, 0, 0), 1)
-
-    return frame
+    
+    return frame, contours
 
 if __name__ == "__main__":
     cap = cv2.VideoCapture(0)
