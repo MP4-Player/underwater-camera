@@ -153,7 +153,8 @@ def clear_text():
     st.session_state.text = ""
 
 
-def get_dots_coords(point: tuple[int, int]) -> tuple[int, int, int, int]:
+# def get_dots_coords(point: tuple[int, int]) -> tuple[int, int, int, int]:
+def get_dots_coords(point):
     center = point
     #print(center)
     radius = 3
