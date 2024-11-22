@@ -1,4 +1,6 @@
 import cv2
+import os 
+import shutil
 import streamlit as st
 from PIL import Image, ImageDraw
 from streamlit_image_coordinates import streamlit_image_coordinates as sic
@@ -6,6 +8,15 @@ import json
 import datetime
 from board_defect.main_code_board_defect import *
 from board_defect.autopoint import *
+
+current_directory = os.getcwd()
+
+def delete_pycache(directory):
+    for root, dirs, files in os.walk(directory):
+        if '__pycache__' in dirs:
+            pycache_path = os.path.join(root, '__pycache__')
+            shutil.rmtree(pycache_path)
+            dirs.remove('__pycache__') 
 
 def main_menu(logo1_url, logo2_url):
     st.markdown(
@@ -81,6 +92,7 @@ def main_menu(logo1_url, logo2_url):
         st.rerun()
 
 def measurement_window():
+    delete_pycache(current_directory)
     
     st.title('Трансляция камеры')
         
@@ -100,17 +112,20 @@ def measurement_window():
     if st.session_state['flag'] == True:
         stream(st.session_state['flag'])
     
-    title = st.text_input("Введите название объекта:", key = 'title')
     size = 4539
-
-    identical_names(title)
+    title_empty = st.empty()
+    title = title_empty.text_input("Введите название объекта:", key = 'title')
+    st.write(f"<h3 style='font-size:20px;'>Размер объекта: {size} мм</h3>", unsafe_allow_html=True)
 
     if st.button("Сохранить", key = 'save'):
         if identical_names(title) == 1:
             st.error (f"Объект {title} уже есть, пожалуйста, измените название объекта.")
+            title_empty = st.empty()
+            title = title_empty.text_input("Введите название объекта:", key = 'title_')
         else:
             save_object(title, size)
             st.success("Объект успешно сохранен!")
+        title_empty.empty()
         
     create_frame()
     
@@ -126,6 +141,7 @@ def create_file():
 
 
 def save_object(name, size):
+    delete_pycache(current_directory)
     
     today = datetime.datetime.today()
     new_object = {
@@ -167,6 +183,8 @@ def get_dots_coords(point):
     
     
 def create_frame():
+    delete_pycache(current_directory)
+
     continue_button = st.button("Новый объект")
     
     if not continue_button and len(st.session_state['points']) <= 2:
@@ -232,6 +250,7 @@ def stream(flag):
 
     
 if __name__ == '__main__':
+    delete_pycache(current_directory)
     
     logo1_url = "https://static.tildacdn.com/tild6233-3463-4638-b538-316661656262/Group_277132226.svg"
     logo2_url = "https://lh5.googleusercontent.com/proxy/m--gX8s53PHjWyQu2N9hzN6nxVDua3KVbvWJbRWYKrXsSesft3S16ZN04mokdzZf5djYegQG-vxagH_8HsS8IntftnzMAUyFl61kKt2KggURRzcLIA"
