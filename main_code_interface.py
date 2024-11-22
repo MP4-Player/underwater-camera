@@ -1,11 +1,15 @@
+from gui2 import *
+from board_defect.autopoint import *
+from board_defect.main_code_board_defect import *
+
 import cv2
 import streamlit as st
 from PIL import Image, ImageDraw
 from streamlit_image_coordinates import streamlit_image_coordinates as sic
 import json
 import datetime
-from board_defect.main_code_board_defect import *
-from board_defect.autopoint import *
+import numpy as np
+from realsense2 import *
 
 def main_menu(logo1_url, logo2_url):
     st.markdown(
@@ -228,6 +232,40 @@ def stream(flag):
                 break
         cap.release()
         cv2.destroyAllWindows()
+
+def stream_realsense(flag):
+    
+    frame_placeholder = st.empty()
+
+    # Кнопка "Пауза" отображается вне основного цикла
+    button_placeholder = st.empty()
+    if button_placeholder.button("Пауза" if not st.session_state["paused"] else "Продолжить"):
+        st.session_state["paused"] = not st.session_state["paused"]
+
+    if not st.session_state['paused'] or flag:
+        realsense = DepthCamera(resolution_width, resolution_height)
+        depth_scale = realsense.get_depth_scale()
+        while True:
+            ret, depth_raw_frame, color_raw_frame = realsense.get_raw_frame()
+            if not ret:
+                print("Unable to get a frame")
+
+            rgb_image = np.asanyarray(color_raw_frame.get_data())
+            depth_image = np.asanyarray(depth_raw_frame.get_data())
+            
+
+
+            if not st.session_state['paused']:
+                points_xyz = depth2PointCloud(depth_raw_frame, depth_scale)
+                frame_placeholder.image(frame, channels="RGB", width=800)
+                dst = calc_dist(points_xyz, st.session_state['points'])
+            else:
+                # Сохраняем текущий кадр при паузе
+                st.session_state["frame"] = frame
+                st.session_state["flag"] = False
+                st.session_state["contours"] = contours
+                break
+            
 
 
     
