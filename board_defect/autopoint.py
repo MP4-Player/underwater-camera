@@ -1,38 +1,49 @@
 import cv2
 import numpy as np
 
-
 def process_image(image_path):
-    
     img = cv2.imread(image_path)
     img = cv2.medianBlur(img, 3)
 
-
     gray_frame = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    
-    t_lower = 70 
-    t_upper = 125 
+    t_lower = 60 
+    t_upper = 200 
     aperture_size = 3 
 
-    
     canny_frame = cv2.Canny(gray_frame, t_lower, t_upper, apertureSize=aperture_size)
 
-  
     contours, hierarchy = cv2.findContours(canny_frame, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
    
-    cv2.drawContours(img, contours, -1, (255, 0, 255), 1)
+    img_inner = img.copy()
+    cv2.drawContours(img_inner, contours, -1, (255, 0, 255), 1, offset=(-3, -3))
 
-    return img, contours
+    return img_inner, contours
+
+def move_point(x, y, counter_point, distance=3):
+    # Вычисляем вектор направления от counter_point к (x, y)
+    direction_vector = np.array([x - counter_point[0], y - counter_point[1]])
+    
+    # Вычисляем длину вектора
+    vector_length = np.linalg.norm(direction_vector)
+    
+    # Нормализуем вектор (делаем его длину равной 1)
+    normalized_vector = direction_vector / vector_length
+    
+    # Умножаем нормализованный вектор на желаемое расстояние (3 пикселя)
+    offset = normalized_vector * distance
+    
+    # Прибавляем смещение к counter_point
+    new_counter_point = (counter_point[0] + offset[0], counter_point[1] + offset[1])
+    
+    return new_counter_point
 
 def mouse_callback(x, y, flags, param, contours):
-    
     min_distance = float('inf')
     contur_point = None
 
     for contour in contours:
         for point in contour: 
-            
             distance = np.linalg.norm(np.array((x, y)) - point[0])
             
             if distance < min_distance and distance <= 10:
@@ -40,9 +51,10 @@ def mouse_callback(x, y, flags, param, contours):
                 contur_point = point[0]
 
     if contur_point is not None:
+        print(contur_point)
         return contur_point[0], contur_point[1]
     else:
-        return x, y
+        return None
 
 def main():
     global img, contours, points
@@ -53,27 +65,20 @@ def main():
 
     points = []
 
-    
     cv2.namedWindow('Image')
     cv2.setMouseCallback('Image', mouse_callback)
 
-
     while True:
-
         cv2.imshow('Image', img)
 
         for point in points:
-
             cv2.circle(img, point, 2, (0, 255, 0), -1)
-
 
         if cv2.waitKey(1) == ord('q'):
             break
 
-
     cv2.destroyAllWindows()
-    print("Список точек:",points)
-
+    print("Список точек:", points)
 
 if __name__ == "__main__":
     main()
