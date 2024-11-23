@@ -130,7 +130,7 @@ def measurement_window():
     if st.session_state['flag'] == True:
         stream_realsense(st.session_state['flag'])
     
-    size = 4539
+    size = st.session_state['size'] if 'size' in st.session_state.keys() else 0
     title_empty = st.empty()
     title = title_empty.text_input("Введите название объекта:", key = 'title')
     st.write(f"<h3 style='font-size:20px;'>Размер объекта: {size} мм</h3>", unsafe_allow_html=True)
@@ -208,7 +208,7 @@ def create_frame():
     for point in st.session_state["points"]:
         #(st.session_state["points"])
         coords = get_dots_coords(point)
-        draw.ellipse(coords, fill="red")
+        draw.ellipse(coords, fill="green")
             
     if not continue_button and len(st.session_state['points']) <= 2:
         value = sic(img, key="pil")

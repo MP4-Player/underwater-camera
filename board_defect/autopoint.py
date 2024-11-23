@@ -7,8 +7,8 @@ def process_image(image_path):
 
     gray_frame = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    t_lower = 60 
-    t_upper = 200 
+    t_lower = 20 
+    t_upper = 230 
     aperture_size = 3 
 
     canny_frame = cv2.Canny(gray_frame, t_lower, t_upper, apertureSize=aperture_size)
@@ -34,7 +34,7 @@ def move_point(x, y, counter_point, distance=3):
     offset = normalized_vector * distance
     
     # Прибавляем смещение к counter_point
-    new_counter_point = (counter_point[0] + offset[0], counter_point[1] + offset[1])
+    new_counter_point = [int(counter_point[0] + offset[0]), int(counter_point[1] + offset[1])]
     
     return new_counter_point
 
@@ -51,10 +51,10 @@ def mouse_callback(x, y, flags, param, contours):
                 contur_point = point[0]
 
     if contur_point is not None:
-        print(contur_point)
-        return contur_point[0], contur_point[1]
+        contur_point = move_point(x, y, contur_point)
+        return x, y
     else:
-        return None
+        return x, y
 
 def main():
     global img, contours, points
