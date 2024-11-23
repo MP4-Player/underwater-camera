@@ -1,4 +1,4 @@
-from gui2 import *
+from gui import *
 from board_defect.autopoint import *
 from board_defect.main_code_board_defect import *
 
@@ -100,12 +100,18 @@ def measurement_window():
     if 'flag' not in st.session_state:
         st.session_state['frame'] = []
 
+    if 'flag' not in st.session_state:
+        st.session_state['size'] = 0
+
+    if 'realsense' not in st.session_state:
+        st.session_state['realsense'] = DepthCamera(resolution_width, resolution_height)
+
     
     if st.session_state['flag'] == True:
-        stream(st.session_state['flag'])
+        stream_realsense(st.session_state['flag'])
     
     title = st.text_input("Введите название объекта:", key = 'title')
-    size = 4539
+    # size = st.session_state['size']
 
     identical_names(title)
 
@@ -113,7 +119,7 @@ def measurement_window():
         if identical_names(title) == 1:
             st.error (f"Объект {title} уже есть, пожалуйста, измените название объекта.")
         else:
-            save_object(title, size)
+            save_object(title, st.session_state['size'])
             st.success("Объект успешно сохранен!")
         
     create_frame()
@@ -160,7 +166,7 @@ def clear_text():
 # def get_dots_coords(point: tuple[int, int]) -> tuple[int, int, int, int]:
 def get_dots_coords(point):
     center = point
-    #print(center)
+    print(center)
     radius = 3
     return (
         center[0] - radius,
@@ -173,13 +179,13 @@ def get_dots_coords(point):
 def create_frame():
     continue_button = st.button("Новый объект")
     
-    if not continue_button and len(st.session_state['points']) <= 2:
+    if not continue_button and len(st.session_state['points']) <= 2 and "frame" in st.session_state.keys():
         img = Image.fromarray(st.session_state['frame'])
         draw = ImageDraw.Draw(img)
         
         
         for point in st.session_state["points"]:
-            #print(st.session_state["points"])
+            print(st.session_state["points"])
             coords = get_dots_coords(point)
             draw.ellipse(coords, fill="red")
         
@@ -188,16 +194,18 @@ def create_frame():
         
         if value is not None:
             point = value["x"], value["y"]
-            print(point)
             if point not in st.session_state["points"]:
                 new_point = mouse_callback(value['x'], value['y'], True, True, st.session_state["contours"])
                 st.session_state["points"].append(new_point)
                 del st.session_state['pil']
                 st.rerun()
-        else:
-            pass
+        if len(st.session_state["points"]) == 2:
+            dst = calc_dist(st.session_state["points_xyz"], st.session_state['points'])
+            st.session_state["size"] = dst
+        
+
     elif continue_button:
-        del st.session_state["points"], st.session_state["frame"], st.session_state["flag"], st.session_state["paused"]
+        del st.session_state["points"], st.session_state["frame"], st.session_state["flag"], st.session_state["paused"], st.session_state["size"]
 
 
 def stream(flag):
@@ -234,37 +242,43 @@ def stream(flag):
         cv2.destroyAllWindows()
 
 def stream_realsense(flag):
-    
     frame_placeholder = st.empty()
-
-    # Кнопка "Пауза" отображается вне основного цикла
     button_placeholder = st.empty()
+
     if button_placeholder.button("Пауза" if not st.session_state["paused"] else "Продолжить"):
         st.session_state["paused"] = not st.session_state["paused"]
+    print(st.session_state["paused"])
+    
 
     if not st.session_state['paused'] or flag:
-        realsense = DepthCamera(resolution_width, resolution_height)
-        depth_scale = realsense.get_depth_scale()
-        while True:
-            ret, depth_raw_frame, color_raw_frame = realsense.get_raw_frame()
-            if not ret:
-                print("Unable to get a frame")
+        try:
+            depth_scale = st.session_state['realsense'].get_depth_scale()
 
-            rgb_image = np.asanyarray(color_raw_frame.get_data())
-            depth_image = np.asanyarray(depth_raw_frame.get_data())
-            
+            while True:
+                ret, depth_raw_frame, color_raw_frame = st.session_state['realsense'].get_raw_frame()
+                if not ret:
+                    print("Unable to get a frame")
+                    break
 
-
-            if not st.session_state['paused']:
-                points_xyz = depth2PointCloud(depth_raw_frame, depth_scale)
-                frame_placeholder.image(frame, channels="RGB", width=800)
-                dst = calc_dist(points_xyz, st.session_state['points'])
-            else:
-                # Сохраняем текущий кадр при паузе
-                st.session_state["frame"] = frame
-                st.session_state["flag"] = False
-                st.session_state["contours"] = contours
-                break
+                rgb_image = np.asanyarray(color_raw_frame.get_data())
+                depth_image = np.asanyarray(depth_raw_frame.get_data())
+                frame = show(rgb_image, depth_image)
+                frame, contours = process_frame(frame)
+                print(st.session_state["paused"])
+                if st.session_state['paused'] == False:
+                    frame_placeholder.image(frame, channels="RGB", width=800)
+                elif st.session_state['paused'] == True:
+                    print("WE ARE IN ELIF")
+                    if st.session_state['realsense']:
+                        st.session_state['realsense'].release()
+                    points_xyz = depth2PointCloud(depth_raw_frame, depth_scale)
+                    st.session_state["frame"] = frame
+                    st.session_state["points_xyz"] = points_xyz
+                    st.session_state["flag"] = False
+                    st.session_state["contours"] = contours
+                    break
+        except RuntimeError as e:
+            st.error(f"Error: {e}. Please make sure the device is not busy and try again.")
             
 
 

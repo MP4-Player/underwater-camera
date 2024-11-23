@@ -21,6 +21,7 @@ def most_unique_elements(list_):
 
 
 def calc_dist(points_xyz_mat, points):
+    print(points)
     if len(points) == 2:
         x1 = points_xyz_mat[points[0][1], points[0][0]][0]
         y1 = points_xyz_mat[points[0][1], points[0][0]][1]
@@ -28,9 +29,13 @@ def calc_dist(points_xyz_mat, points):
         x2 = points_xyz_mat[points[1][1], points[1][0]][0]
         y2 = points_xyz_mat[points[1][1], points[1][0]][1]
         z2 = points_xyz_mat[points[1][1], points[1][0]][2]
+        print(x1, x2)
+        print(y1, y2)
+        print(z1, z2)
         dst = round(math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2 + (z1 - z2) ** 2) * 1000)
-        return calc_median(dst)
+        return dst
     else:
+        print("ELSE WITH ZERO")
         return 0
 
 

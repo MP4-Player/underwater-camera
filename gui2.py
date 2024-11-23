@@ -37,7 +37,7 @@ class CvWindow(object):
         depth_colormap = cv2.GaussianBlur(depth_colormap, (5, 5), 0)
 
         # Наложение карты глубины на цветное изображение с использованием альфа-канала
-        alpha = 0.2  # Прозрачность карты глубины
+        alpha = 0.4  # Прозрачность карты глубины
         beta = 1 - alpha  # Прозрачность цветного изображения
         blended_image = cv2.addWeighted(rgb_image, beta, depth_colormap, alpha, 0)
 
