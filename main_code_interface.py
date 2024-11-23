@@ -3,13 +3,35 @@ from board_defect.autopoint import *
 from board_defect.main_code_board_defect import *
 
 import cv2
+import os 
+import shutil
 import streamlit as st
 from PIL import Image, ImageDraw
 from streamlit_image_coordinates import streamlit_image_coordinates as sic
 import json
 import datetime
+from board_defect.main_code_board_defect import *
+from board_defect.autopoint import *
 import numpy as np
 from realsense2 import *
+
+current_directory = os.getcwd()
+
+def delete_pycache(directory):
+    for root, dirs, files in os.walk(directory):
+        if '__pycache__' in dirs:
+            pycache_path = os.path.join(root, '__pycache__')
+            shutil.rmtree(pycache_path)
+            dirs.remove('__pycache__') 
+
+current_directory = os.getcwd()
+
+def delete_pycache(directory):
+    for root, dirs, files in os.walk(directory):
+        if '__pycache__' in dirs:
+            pycache_path = os.path.join(root, '__pycache__')
+            shutil.rmtree(pycache_path)
+            dirs.remove('__pycache__') 
 
 def main_menu(logo1_url, logo2_url):
     st.markdown(
@@ -41,41 +63,38 @@ def main_menu(logo1_url, logo2_url):
     unsafe_allow_html=True,
 )
 
-    # Подзаголовок
     st.write("##### для ООО «Центр робототехники»")
-
-    # Инструкция
+    st.write("\n\t")
+    st.write("""
+            ### Назначение проекта
+            Проекта предназначен для определения размеров трещин и пробоин в днищах кораблей и в причалах с использованием камеры находящееся подводой.
+            """)
     st.write("## Инструкция по пользованию приложением")
     st.write("""
-    #### Главная страница:
-    - Ознакомьтесь с названием и назначением приложения.
-    - Убедитесь, что необходимое оборудование подключено.
+#### Главная страница.
+- Ознакомьтесь с названием и назначением приложения.
+- Убедитесь, что необходимое оборудование подключено.
 
-    #### Переход к измерениям:
-    - Нажмите на кнопку **"Перейти к измерениям"**, чтобы перейти к основному функционалу.
+#### Процесс измерения:
+- Нажмите на кнопку **"Перейти к измерениям"** или на кнопку **"📏Измерение"** в боковой панели, чтобы перейти к основному функционалу.
+- На странице измерений вы увидите основное окно, где будет видеострим с подводной камеры.
+- Для приостановки видеострима нажмите на кнопку **"Пауза"**.
+- После этого, перед вами будет изображение на котором нужно отметить 2 точки.
+- Далее высветится окно с результатами измерения и окно с для ввода названия объекта.
 
-    #### Процесс измерения:
-    - На странице измерений настройте параметры для работы устройства:
-    - Выберите параметры камеры (разрешение, угол обзора и т. д.).
-    - Убедитесь, что устройство корректно откалибровано.
-    - Нажмите кнопку **"Начать измерение"**, чтобы получить данные.
+#### Сохранение результатов:
+- После завершения измерения сохраните результаты.
+- Введите название объекта в поле "Название объекта"
+- Нажмите кнопку **"Сохранить"**.
+- Для измерения нового объекта нажмите 2 раза на кнопку **"Новый объект"** или кнопку   **"📏Измерение"** в боковой панели.
 
-    #### Сохранение результатов:
-    - После завершения измерения сохраните результаты:
-    - Нажмите кнопку **"Сохранить"**.
-    - Укажите путь для сохранения файла или выберите предложенный.
+#### История измерений:
+- Перейдите в раздел **"История измерений"** через боковую панель для просмотра ранее сохранённых данных.
+- Вы можете просмотреть или удалить ненужные записи.
 
-    #### История измерений:
-    - Перейдите в раздел **"История измерений"** через боковую панель для просмотра ранее сохранённых данных.
-    - Вы можете скачать результаты или удалить ненужные записи.
-
-    #### Анализ данных:
-    - Используйте инструменты анализа внутри приложения для обработки измерений.
-    - Сравните результаты с предыдущими измерениями для получения полной картины.
-
-    #### Обратная связь:
-    - Если у вас возникли вопросы или проблемы, обратитесь в техническую поддержку или ознакомьтесь с документацией.
-    """, key = 'text')
+#### Обратная связь:
+- Если у вас возникли вопросы или проблемы, ознакомьтесь с документацией представленной на главном экране.
+""", key = 'text')
     # Кнопка
     st.write("\n\n")
     #st.button("Перейти к измерениям", key="measurement_button")
@@ -85,6 +104,7 @@ def main_menu(logo1_url, logo2_url):
         st.rerun()
 
 def measurement_window():
+    delete_pycache(current_directory)
     
     st.title('Трансляция камеры')
         
@@ -110,22 +130,23 @@ def measurement_window():
     if st.session_state['flag'] == True:
         stream_realsense(st.session_state['flag'])
     
-    title = st.text_input("Введите название объекта:", key = 'title')
-    # size = st.session_state['size']
-
-    identical_names(title)
+    size = 4539
+    title_empty = st.empty()
+    title = title_empty.text_input("Введите название объекта:", key = 'title')
+    st.write(f"<h3 style='font-size:20px;'>Размер объекта: {size} мм</h3>", unsafe_allow_html=True)
 
     if st.button("Сохранить", key = 'save'):
         if identical_names(title) == 1:
             st.error (f"Объект {title} уже есть, пожалуйста, измените название объекта.")
+            title_empty = st.empty()
+            title = title_empty.text_input("Введите название объекта:", key = 'title_')
         else:
             save_object(title, st.session_state['size'])
             st.success("Объект успешно сохранен!")
+        title_empty.empty()
         
     create_frame()
     
-
-
 
 def create_file():
     data = {}
@@ -136,6 +157,7 @@ def create_file():
 
 
 def save_object(name, size):
+    delete_pycache(current_directory)
     
     today = datetime.datetime.today()
     new_object = {
@@ -166,7 +188,6 @@ def clear_text():
 # def get_dots_coords(point: tuple[int, int]) -> tuple[int, int, int, int]:
 def get_dots_coords(point):
     center = point
-    print(center)
     radius = 3
     return (
         center[0] - radius,
@@ -177,26 +198,27 @@ def get_dots_coords(point):
     
     
 def create_frame():
+    delete_pycache(current_directory)
+
     continue_button = st.button("Новый объект")
     
-    if not continue_button and len(st.session_state['points']) <= 2 and "frame" in st.session_state.keys():
-        img = Image.fromarray(st.session_state['frame'])
-        draw = ImageDraw.Draw(img)
-        
-        
-        for point in st.session_state["points"]:
-            print(st.session_state["points"])
-            coords = get_dots_coords(point)
-            draw.ellipse(coords, fill="red")
-        
-        
+    img = Image.fromarray(st.session_state['frame'])
+    draw = ImageDraw.Draw(img)
+    
+    for point in st.session_state["points"]:
+        #(st.session_state["points"])
+        coords = get_dots_coords(point)
+        draw.ellipse(coords, fill="red")
+            
+    if not continue_button and len(st.session_state['points']) <= 2:
         value = sic(img, key="pil")
-        
         if value is not None:
             point = value["x"], value["y"]
             if point not in st.session_state["points"]:
                 new_point = mouse_callback(value['x'], value['y'], True, True, st.session_state["contours"])
                 st.session_state["points"].append(new_point)
+                if len(st.session_state['points']) == 3:
+                    del st.session_state["points"][2]
                 del st.session_state['pil']
                 st.rerun()
         if len(st.session_state["points"]) == 2:
@@ -284,6 +306,7 @@ def stream_realsense(flag):
 
     
 if __name__ == '__main__':
+    delete_pycache(current_directory)
     
     logo1_url = "https://static.tildacdn.com/tild6233-3463-4638-b538-316661656262/Group_277132226.svg"
     logo2_url = "https://lh5.googleusercontent.com/proxy/m--gX8s53PHjWyQu2N9hzN6nxVDua3KVbvWJbRWYKrXsSesft3S16ZN04mokdzZf5djYegQG-vxagH_8HsS8IntftnzMAUyFl61kKt2KggURRzcLIA"
